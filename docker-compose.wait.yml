@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  ecobnb_db_test:
+    image: mongo
+    container_name: ecobnb_db_test
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+  ecobnb_cache_test:
+    image: redis:5-alpine
+    container_name: ecobnb_cache_test
+    command: /bin/sh -c "redis-server --requirepass $$REDIS_PASSWORD"
+    ports:
+      - 6379:6379
+    env_file:
+      - .env
+    

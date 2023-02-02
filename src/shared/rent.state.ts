@@ -1,0 +1,9 @@
+export enum RentState {
+    REQUEST='REQUEST',
+    APPROVED='APPROVED',
+    REJECTED='REJECTED',
+    PAYING='PAYING',
+    PAID='PAID',
+    EXPIRED='EXPIRED',
+    CANCELED='CANCELED',
+  }

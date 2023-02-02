@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  ecobnb_api:
+    image: ecobnb_api
+    container_name: ecobnb_api
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh /app/start.sh
+    depends_on:
+      - ecobnb_db
+      - ecobnb_cache
+    ports:
+      - ${PORT}:${PORT}
+    env_file:
+      - ${ENV_FILE:-.noenv}
+    
+  ecobnb_db:
+    image: mongo
+    container_name: ecobnb_db
+    ports:
+      - ${MONGO_PORT}:${MONGO_PORT}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+  ecobnb_cache:
+    image: redis:5-alpine
+    container_name: ecobnb_cache
+    command: /bin/sh -c "redis-server --requirepass $$REDIS_PASSWORD"
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    env_file:
+      - ${ENV_FILE:-.noenv}
