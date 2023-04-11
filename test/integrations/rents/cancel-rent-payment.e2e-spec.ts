@@ -21,8 +21,8 @@ describe('Cancel Rent Payment', () => {
   let newUser: any;
   let property: any;
   let rent: any;
-  let token: string;
-  let newToken: string;
+  let authorization: any;
+  let newAuthorization: any;
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
 
@@ -48,8 +48,8 @@ describe('Cancel Rent Payment', () => {
     newUser = await fixture.createUser({ email: 'user@mail.com', phone: '12345678990'});
     property = await fixture.createProperty(user);
     rent = await fixture.requestRent(newUser, property);
-    token = await fixture.login(user);
-    newToken = await fixture.login(newUser);
+    authorization = await fixture.login(user);
+    newAuthorization = await fixture.login(newUser);
   });
 
   afterEach(async() => {
@@ -67,7 +67,7 @@ describe('Cancel Rent Payment', () => {
   it('should fail when invalid id is sent', async () => {        
     const response = await request(httpServer)
       .patch(`/rents/${1}/cancel`)
-      .set('token', token);
+      .set('authorization', authorization);
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
     expect(response.body).to.deep.include({
@@ -81,7 +81,7 @@ describe('Cancel Rent Payment', () => {
                
     const response = await request(httpServer)
       .patch(`/rents/${id}/cancel-rent-payment`)
-      .set('token', token);      
+      .set('authorization', authorization);      
 
     expect(response.status).to.equal(HttpStatus.NOT_FOUND);      
     expect(response.body).to.deep.include({
@@ -93,7 +93,7 @@ describe('Cancel Rent Payment', () => {
   it('should fail when cancelling for rent that is not yours', async () => {
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/cancel-rent-payment`)
-      .set('token', token);
+      .set('authorization', authorization);
 
     expect(response.status).to.equal(HttpStatus.UNAUTHORIZED);      
     expect(response.body).to.deep.include({
@@ -107,7 +107,7 @@ describe('Cancel Rent Payment', () => {
 
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/cancel-rent-payment`)
-      .set('token', newToken);
+      .set('authorization', newAuthorization);
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
     expect(response.body).to.deep.include({
@@ -121,7 +121,7 @@ describe('Cancel Rent Payment', () => {
   
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/cancel-rent-payment`)
-      .set('token', newToken);
+      .set('authorization', newAuthorization);
 
     expect(response.status).to.equal(HttpStatus.OK);      
     expect(response.body.payload).to.deep.include({ ...rentStub, status: RentState.APPROVED });

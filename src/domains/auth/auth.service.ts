@@ -1,26 +1,42 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { decode, sign } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
-import { MailEnum } from '../../mail/mail.enum';
 import { MailService } from '../../mail/mail.service';
 import { RedisCacheKeys } from '../../redis-cache/redis-cache.keys';
 import { RedisCacheService } from '../../redis-cache/redis-cache.service';
-import { UsersService } from '../users/users.service';
 import { AuthSchema } from './entities/auth.schema';
 import { LoginResponse } from './responses/login.response';
+import { InjectModel } from '@nestjs/mongoose';
+import { User, UserDocument } from '../users/entities/user.entity';
+import { Model } from 'mongoose';
+import { MailTemplateEnum } from '../../mail/mail-template.enum';
 
 
 @Injectable()
 export class AuthService {
+
+  async findByEmail(email: string) {
+    let user = await this.redisCacheService.get(`${RedisCacheKeys.GET_USER}:${email}`);
+    if (user) {
+      return user;
+    }
+    user = await this.userModel.findOne({ email, hidden: false }) as User;
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return User.toResponse(user);
+  }
+
   constructor(
+    @InjectModel(User.name) public readonly userModel: Model<UserDocument>,
     private readonly redisCacheService: RedisCacheService,
     private readonly mailService: MailService,
     private configService: ConfigService,
-    private userService: UsersService
   ){}
 
-  async request(email: string) {    
-    const user = (await this.userService.findByEmail(email));        
+  async requestPassword(email: string) {    
+    const user = await this.findByEmail(email);
     const password = Math.floor(Math.random() * 100000);    
 
     const key = `${RedisCacheKeys.AUTH_PASS}:${user.email}`;
@@ -29,7 +45,7 @@ export class AuthService {
     await this.mailService.sendMail({
       to: user.email,
       subject: 'OTP Request',
-      template: MailEnum.OTP,
+      template: MailTemplateEnum.OTP,
       context: {
         password,
         name: user.firstname
@@ -40,11 +56,11 @@ export class AuthService {
   }
 
   async login(auth: AuthSchema){
-    const user = (await this.userService.findByEmail(auth.email));
+    const user = await this.findByEmail(auth.email);
     await this.authenticate(auth);
-    const token = sign(user._id, this.configService.get('SECRET'));
+    const authorization = sign(user._id, this.configService.get('SECRET'));
     
-    return { success: true, payload: token } as LoginResponse;
+    return { success: true, payload: authorization } as LoginResponse;
   }
 
   async authenticate(auth: AuthSchema){
@@ -55,11 +71,26 @@ export class AuthService {
     }
   }
 
-  async decode(token: string){    
-    const id = decode(token, this.configService.get('SECRET')) as unknown as string;
-    if (!id) throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+  async decode(authorization: string){    
+    const id = decode(authorization, this.configService.get('SECRET')) as unknown as string;
+    if (!id) throw new HttpException('Invalid authorization', HttpStatus.UNAUTHORIZED);
         
-    const user = await this.userService.findById(id);
+    const user = await this.userModel.findById(id);
     return user;
+  }
+
+  async verifyUser(code: string) {
+    const key = `${RedisCacheKeys.VERIFY_USER}:${code}`;
+    let data = await this.redisCacheService.get(key);
+    if (!data) throw new HttpException('Verification link has expired', HttpStatus.EXPECTATION_FAILED);
+
+    await this.redisCacheService.del(key);
+    const user = await this.userModel.findById(data._id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    await this.userModel.findOneAndUpdate({ _id: data._id }, { verified: true, email: data.email });
+
+    return { success: true };
   }
 }

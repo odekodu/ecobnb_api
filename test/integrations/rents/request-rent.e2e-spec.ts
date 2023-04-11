@@ -17,7 +17,7 @@ describe('Request Rent', () => {
   let dbConnection: Connection;
   let fixture: Fixture;
   let user: any;
-  let token: any;
+  let authorization: any;
   let property: any;
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
@@ -41,7 +41,7 @@ describe('Request Rent', () => {
 
   beforeEach(async () => {
     user = await fixture.createUser();
-    token = await fixture.login(user);
+    authorization = await fixture.login(user);
     property = await fixture.createProperty(user);
   });
 
@@ -60,7 +60,7 @@ describe('Request Rent', () => {
   it('should fail when no property is provided', async () => {
     const response = await request(httpServer)
       .post('/rents')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({});    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -75,7 +75,7 @@ describe('Request Rent', () => {
 
     const response = await request(httpServer)
       .post('/rents')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ property: propertyId });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -90,7 +90,7 @@ describe('Request Rent', () => {
 
     const response = await request(httpServer)
       .post('/rents')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ property: propertyId, duration: 'Five' });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -105,7 +105,7 @@ describe('Request Rent', () => {
 
     const response = await request(httpServer)
       .post('/rents')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ property: propertyId, duration });    
 
     expect(response.status).to.equal(HttpStatus.NOT_FOUND);  
@@ -120,7 +120,7 @@ describe('Request Rent', () => {
 
     const response = await request(httpServer)
       .post('/rents')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ property: propertyId, duration });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -136,12 +136,12 @@ describe('Request Rent', () => {
 
     await request(httpServer)
       .post('/rents')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ property: propertyId, duration });
 
     const response = await request(httpServer)
       .post('/rents')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ property: propertyId, duration });    
 
     expect(response.status).to.equal(HttpStatus.CONFLICT);  
@@ -157,7 +157,7 @@ describe('Request Rent', () => {
 
     const response = await request(httpServer)
       .post('/rents')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ property: propertyId, duration });    
 
     expect(response.status).to.equal(HttpStatus.CREATED);  

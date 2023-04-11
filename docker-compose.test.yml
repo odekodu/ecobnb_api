@@ -10,18 +10,17 @@ services:
       target: development
     command: sh /app/start.sh
     depends_on:
-      - ecobnb_db_test
-      - ecobnb_cache_test
+      - ecobnb_db
+      - ecobnb_cache
     ports:
       - 8081:8081
-    env_file:
-      - ${ENV_FILE:-.noenv}
     environment:
-      DATABASE_URI: mongodb://root:password@ecobnb_db_test:27017
+      DATABASE_URI: mongodb://ecobnb_db:27017
+      DATABASE_NAME: nestjs
       NODE_ENV: test
       MONGO_PORT: 27017
       PORT: 8081
-      REDIS_HOST: ecobnb_cache_test
+      REDIS_HOST: ecobnb_cache
       REDIS_PORT: 6379
       CACHE_TTL: 3600
       DEFAULT_EMAIL: ikekatochukwu@gmail.com
@@ -31,22 +30,16 @@ services:
       MAIL_FROM: noreply@example.com
       SECRET: qw34er5t656&&^**&2
       REQUEST_LIMIT: 3
-  ecobnb_db_test:
+  
+  ecobnb_db:
     image: mongo
-    container_name: ecobnb_db_test
+    container_name: ecobnb_db
     ports:
       - 27017:27017
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
-    logging:
-      driver: none
 
-  ecobnb_cache_test:
+  ecobnb_cache:
     image: redis:5-alpine
-    container_name: ecobnb_cache_test
+    container_name: ecobnb_cache
     ports:
       - 6379:6379
-    logging:
-      driver: none
       

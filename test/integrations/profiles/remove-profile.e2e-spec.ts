@@ -18,7 +18,7 @@ describe('Remove Profile', () => {
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
   let user = null;
-  let token: string;
+  let authorization: string;
 
   before(async () => {
     moduleFixture = await Test.createTestingModule({
@@ -39,7 +39,7 @@ describe('Remove Profile', () => {
 
   beforeEach(async () => {
     user = await fixture.createUser();
-    token = await fixture.login(user);
+    authorization = await fixture.login(user);
     await fixture.requestPassword(user.email);
   });
 
@@ -56,7 +56,7 @@ describe('Remove Profile', () => {
   it('should delete the user', async () => {        
     const response = await request(httpServer)
       .delete('/profile')
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password);
 
     expect(response.status).to.equal(HttpStatus.OK);      

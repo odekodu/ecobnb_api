@@ -4,11 +4,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RentState } from '../../shared/rent.state';
 import { MailService } from '../../mail/mail.service';
-import { RedisCacheService } from '../../redis-cache/redis-cache.service';
 import { Storage } from '../../shared/storage';
 import { PropertiesService } from '../properties/properties.service';
 import { CreateRentDto } from './dto/create-rent.dto';
-import { UpdateRentDto } from './dto/update-rent.dto';
 import { Rent, RentDocument } from './entities/rent.entity';
 import { RentResponse } from './responses/rent.response';
 import { SortEnum } from '../../shared/sort.enum';
@@ -16,10 +14,10 @@ import { ListRentsResponse } from './responses/list-rents.response';
 import { TransactionsService } from '../transactions/transactions.service';
 import { CreateTransactionDto } from '../transactions/dto/create-transaction.dto';
 import { TransactableEnum } from '../transactions/dto/transactable.enum';
-import { MailEnum } from '../../mail/mail.enum';
 import { UsersService } from '../users/users.service';
 import { addDays, differenceInDays, differenceInHours } from 'date-fns';
-import { any } from 'joi';
+import { MailTemplateEnum } from '../../mail/mail-template.enum';
+import { RedisCacheService } from '../../redis-cache/redis-cache.service';
 
 @Injectable()
 export class RentsService {
@@ -256,7 +254,7 @@ export class RentsService {
       await this.mailService.sendMail({
         to: user.payload.email,
         subject: 'Rent Reminder',
-        template: MailEnum.RENT_REMINDER,
+        template: MailTemplateEnum.RENT_REMINDER,
         context: {
           url: 'https://occupyapi.herokuapp.com/verify',
           name: user.payload.firstname,
@@ -272,7 +270,7 @@ export class RentsService {
       await this.mailService.sendMail({
         to: user.payload.email,
         subject: 'Rent Reminder',
-        template: MailEnum.RENT_REMINDER,
+        template: MailTemplateEnum.RENT_REMINDER,
         context: {
           url: 'https://occupyapi.herokuapp.com/verify',
           name: user.payload.firstname,

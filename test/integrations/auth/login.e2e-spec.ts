@@ -5,14 +5,12 @@ import { Connection } from 'mongoose';
 import { DatabaseService } from '../../../src/database/database.service';
 import { AppModule } from '../../../src/app.module';
 import { Fixture } from '../../../test/fixture';
-import { ErrorResponse } from '../../../src/errors/error.response';
 import { RedisCacheService } from '../../../src/redis-cache/redis-cache.service';
 import { ConfigService } from '@nestjs/config';
 import { userStub } from '../../../test/stubs/user.stubs';
-import { RedisCacheKeys } from '../../../src/redis-cache/redis-cache.keys';
 import { expect } from 'chai';
 
-describe('Request One time password', () => {
+describe('Login', () => {
   let app: INestApplication;
   let httpServer: any;
   let moduleFixture: TestingModule;

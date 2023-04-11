@@ -5,12 +5,11 @@ import { Connection } from 'mongoose';
 import { DatabaseService } from '../../../src/database/database.service';
 import { AppModule } from '../../../src/app.module';
 import { Fixture } from '../../fixture';
-import { ErrorResponse } from '../../../src/errors/error.response';
 import { RedisCacheService } from '../../../src/redis-cache/redis-cache.service';
 import { ConfigService } from '@nestjs/config';
-import { UserResponse } from '../../../src/domains/users/responses/user.response';
 import { userStub } from '../../stubs/user.stubs';
 import { expect } from 'chai';
+import { Storage } from '../../../src/shared/storage';
 
 describe('Update Profile', () => {
   let app: INestApplication;
@@ -21,7 +20,7 @@ describe('Update Profile', () => {
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
   let user = null;
-  let token: string;
+  let authorization: string;
 
   before(async () => {
     moduleFixture = await Test.createTestingModule({
@@ -42,7 +41,7 @@ describe('Update Profile', () => {
 
   beforeEach(async () => {
     user = await fixture.createUser();
-    token = await fixture.login(user);
+    authorization = await fixture.login(user);
     await fixture.requestPassword(user.email);
   });
 
@@ -54,9 +53,10 @@ describe('Update Profile', () => {
     await dbConnection.dropDatabase();
     await app.close();
     await moduleFixture.close();
+    Storage.reset();
   });
 
-  it('should fail when no token is provided', async () => {
+  it('should fail when no authorization is provided', async () => {
     const response = await request(httpServer)
       .patch('/profile')
       .send();   
@@ -68,23 +68,23 @@ describe('Update Profile', () => {
     })  
   });
 
-  it('should fail when invalid token is provided', async () => {
+  it('should fail when invalid authorization is provided', async () => {
     const response = await request(httpServer)
       .patch('/profile')
-      .set('token', 'token')
+      .set('authorization', 'authorization')
       .send();   
 
     expect(response.status).to.equal(HttpStatus.UNAUTHORIZED);  
     expect(response.body).to.deep.include({
       success: false,
-      message: 'Invalid token'
+      message: 'Invalid authorization'
     });  
   });
 
   it('should fail when no password is provided', async () => {
     const response = await request(httpServer)
       .patch('/profile')
-      .set('token', token)
+      .set('authorization', authorization)
       .send(); 
     
       expect(response.status).to.equal(HttpStatus.UNAUTHORIZED);  
@@ -97,7 +97,7 @@ describe('Update Profile', () => {
   it('should fail when wrong password is provided', async () => {
     const response = await request(httpServer)
       .patch('/profile')
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', '11223')
       .send(); 
     
@@ -111,7 +111,7 @@ describe('Update Profile', () => {
   it('should fail when invalid email is provided', async () => {
     const response = await request(httpServer)
       .patch('/profile')
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password)
       .send({ email: 'email' }); 
     
@@ -125,7 +125,7 @@ describe('Update Profile', () => {
   it('should fail when invalid phone is provided', async () => {
     const response = await request(httpServer)
       .patch('/profile')
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password)
       .send({ phone: 'phone' }); 
     
@@ -140,7 +140,7 @@ describe('Update Profile', () => {
     await fixture.createUser({ email: 'user@mail.com', phone: '11111111111' });
     const response = await request(httpServer)
       .patch('/profile')
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password)
       .send({ email: 'user@mail.com' });  
 
@@ -155,7 +155,7 @@ describe('Update Profile', () => {
     await fixture.createUser({ email: 'user@mail.com', phone: '11111111111' });
     const response = await request(httpServer)
       .patch('/profile')
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password)
       .send({ phone: '11111111111' });  
 
@@ -169,11 +169,22 @@ describe('Update Profile', () => {
   it('should succeed when valid data is sent', async () => {    
     const response = await request(httpServer)
       .patch('/profile')
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password)
       .send({ phone: '11111111111' });  
 
     expect(response.status).to.equal(HttpStatus.OK);      
     expect(response.body.payload).to.deep.include({ ...userStub, phone: '11111111111' });
+  });
+
+  it('should succeed when updating image of user', async () => {    
+    const response = await request(httpServer)
+      .patch('/profile')
+      .set('authorization', authorization)
+      .set('password', fixture.password)
+      .send({ image: fixture.image });  
+
+    expect(response.status).to.equal(HttpStatus.OK);      
+    expect(response.body.payload).to.deep.include({ ...userStub });
   });
 });

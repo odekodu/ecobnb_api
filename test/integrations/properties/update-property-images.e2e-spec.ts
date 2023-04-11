@@ -20,7 +20,7 @@ describe('Update Property Images', () => {
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
   let user = null;
-  let token: string;
+  let authorization: any;
   let property = null;
 
   before(async () => {
@@ -43,7 +43,7 @@ describe('Update Property Images', () => {
   beforeEach(async () => {
     user = await fixture.createUser();
     property = await fixture.createProperty(user);
-    token = await fixture.login(user);
+    authorization = await fixture.login(user);
   });
 
   afterEach(async() => {
@@ -62,7 +62,7 @@ describe('Update Property Images', () => {
     const response = await request(httpServer)
     .patch(`/properties/1/images`)
     .attach('images', './test/sample.png')
-    .set('token', token)
+    .set('authorization', authorization)
     .set('Content-Type', 'multipart/form-data');
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
@@ -78,7 +78,7 @@ describe('Update Property Images', () => {
     const response = await request(httpServer)
     .patch(`/properties/${id}/images`)
     .attach('images', './test/sample.png')
-    .set('token', token)
+    .set('authorization', authorization)
     .set('Content-Type', 'multipart/form-data');
  
 
@@ -92,7 +92,7 @@ describe('Update Property Images', () => {
   it('should fail when no images is sent', async () => {    
     const response = await request(httpServer)
       .patch(`/properties/${property._id}/images`)
-      .set('token', token);
+      .set('authorization', authorization);
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
     expect(response.body).to.deep.include({
@@ -115,7 +115,7 @@ describe('Update Property Images', () => {
       .attach('images', './test/sample.png')
       .attach('images', './test/sample.png')
       .attach('images', './test/sample.png')
-      .set('token', token)
+      .set('authorization', authorization)
       .set('Content-Type', 'multipart/form-data');
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -128,7 +128,7 @@ describe('Update Property Images', () => {
     const response = await request(httpServer)
     .patch(`/properties/${property._id}/images`)
     .attach('images', './test/sample.png')
-    .set('token', token)
+    .set('authorization', authorization)
     .set('Content-Type', 'multipart/form-data');
 
     expect(response.status).to.equal(HttpStatus.OK);          

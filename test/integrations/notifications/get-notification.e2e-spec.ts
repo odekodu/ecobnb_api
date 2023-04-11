@@ -7,19 +7,20 @@ import { AppModule } from '../../../src/app.module';
 import { Fixture } from '../../fixture';
 import { RedisCacheService } from '../../../src/redis-cache/redis-cache.service';
 import { ConfigService } from '@nestjs/config';
-import { Storage } from '../../../src/shared/storage';
 import { expect } from 'chai';
+import { notificationStub } from '../../stubs/notification.stub';
 
-describe('Update Profile Image', () => {
+describe('Get Notification', () => {
   let app: INestApplication;
   let httpServer: any;
   let moduleFixture: TestingModule;
   let dbConnection: Connection;
   let fixture: Fixture;
+  let user: any;
+  let notification: any;
+  let authorization: string;
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
-  let user = null;
-  let token: string;
 
   before(async () => {
     moduleFixture = await Test.createTestingModule({
@@ -35,45 +36,58 @@ describe('Update Profile Image', () => {
     dbConnection = moduleFixture.get<DatabaseService>(DatabaseService).getConnection();
     redisCacheService = moduleFixture.get<RedisCacheService>(RedisCacheService);
     configService = moduleFixture.get<ConfigService>(ConfigService);
-    fixture = new Fixture(dbConnection, redisCacheService, configService, );
+    fixture = new Fixture(dbConnection, redisCacheService, configService);
   });
 
   beforeEach(async () => {
     user = await fixture.createUser();
-    token = await fixture.login(user);
-    await fixture.requestPassword(user.email);
+    notification = await fixture.createNotification(user);
+    authorization = await fixture.login(user);
   });
 
   afterEach(async() => {
     await dbConnection.collection('users').deleteMany({});
+    await dbConnection.collection('notifications').deleteMany({});
   });
 
   after(async () => {
-    Storage.reset();
     await dbConnection.dropDatabase();
     await app.close();
     await moduleFixture.close();
   });
 
-  it('should fail when no image is sent', async () => {    
+  it('should fail when invalid id is sent', async () => {        
     const response = await request(httpServer)
-      .patch('/profile/image')
-      .set('token', token);
+      .get(`/notifications/${1}`)
+      .set('authorization', authorization);
 
-    expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
+    expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
     expect(response.body).to.deep.include({
       success: false,
-      message: '"file" is not valid'
+      message: '"id" is not a valid uuid'
     });
   });
 
-  it('should succeed when valid data is sent', async () => {    
+  it('should fail when user is not found', async () => {   
+    const id = user._id.toString().split('').reverse().join('');  
+               
     const response = await request(httpServer)
-      .patch('/profile/image')
-      .attach('image', './test/sample.png')
-      .set('token', token)
-      .set('Content-Type', 'multipart/form-data')
+      .get(`/notifications/${id}`)
+      .set('authorization', authorization);       
 
-    expect(response.status).to.equal(HttpStatus.OK);          
+    expect(response.status).to.equal(HttpStatus.NOT_FOUND);      
+    expect(response.body).to.deep.include({
+      success: false,
+      message: 'Notification not found'
+    });
+  });
+
+  it('should get the user', async () => {        
+    const response = await request(httpServer)
+      .get(`/notifications/${notification._id}`)
+      .set('authorization', authorization);    
+
+    expect(response.status).to.equal(HttpStatus.OK);      
+    expect(response.body.payload).to.deep.include(notificationStub);
   });
 });

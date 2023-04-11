@@ -25,8 +25,8 @@ describe('Pay Rent', () => {
   let newUser: any;
   let property: any;
   let rent: any;
-  let token: string;
-  let newToken: string;
+  let authorization: any;
+  let newAuthorization: any;
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
 
@@ -52,8 +52,8 @@ describe('Pay Rent', () => {
     newUser = await fixture.createUser({ email: 'user@mail.com', phone: '12345678990'});
     property = await fixture.createProperty(user);
     rent = await fixture.requestRent(newUser, property);
-    token = await fixture.login(user);
-    newToken = await fixture.login(newUser);
+    authorization = await fixture.login(user);
+    newAuthorization = await fixture.login(newUser);
   });
 
   afterEach(async() => {
@@ -71,7 +71,7 @@ describe('Pay Rent', () => {
   it('should fail when no amount is provided', async () => {
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -84,7 +84,7 @@ describe('Pay Rent', () => {
   it('should fail when invalid amount is provided', async () => {
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount: 'aaa' });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -98,7 +98,7 @@ describe('Pay Rent', () => {
     const { amount } = createTransactionStub(rent._id, TransactableEnum.RENT);
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -112,7 +112,7 @@ describe('Pay Rent', () => {
     const { amount, from } = createTransactionStub(rent._id, TransactableEnum.RENT);
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount, from });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -126,7 +126,7 @@ describe('Pay Rent', () => {
     const { amount, from, to } = createTransactionStub(rent._id, TransactableEnum.RENT);
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount, from, to });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -140,7 +140,7 @@ describe('Pay Rent', () => {
     const { amount, from, to } = createTransactionStub(rent._id, TransactableEnum.RENT);
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount, from, to, transactable: 'something' });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -154,7 +154,7 @@ describe('Pay Rent', () => {
     const { amount, from, to, transactable } = createTransactionStub(rent._id, TransactableEnum.RENT);
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount, from, to, transactable });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -168,7 +168,7 @@ describe('Pay Rent', () => {
     const { amount, from, to, transactable, item, platform } = createTransactionStub(rent._id, TransactableEnum.RENT);
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount, from, to, transactable, item, platform });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -182,7 +182,7 @@ describe('Pay Rent', () => {
     const { amount, from, to, transactable, item, platform, reference } = createTransactionStub(rent._id, TransactableEnum.RENT);      
     const response = await request(httpServer)
       .patch(`/rents/${1}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount, from, to, transactable, item, platform, reference });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
@@ -198,7 +198,7 @@ describe('Pay Rent', () => {
 
     const response = await request(httpServer)
       .patch(`/rents/${id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount, from, to, transactable, item, platform, reference });       
 
     expect(response.status).to.equal(HttpStatus.NOT_FOUND);      
@@ -213,7 +213,7 @@ describe('Pay Rent', () => {
 
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount, from, to, transactable: TransactableEnum.SUBSCRIPTION, item, platform, reference });       
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
@@ -228,7 +228,7 @@ describe('Pay Rent', () => {
 
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ amount, from, to, transactable: TransactableEnum.SUBSCRIPTION, item: user._id, platform, reference });       
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
@@ -242,7 +242,7 @@ describe('Pay Rent', () => {
     const { amount, from, to, transactable, item, platform, reference } = createTransactionStub(rent._id, TransactableEnum.RENT);  
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', newToken)
+      .set('authorization', newAuthorization)
       .send({ amount, from, to, transactable, item, platform, reference });       
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
@@ -258,7 +258,7 @@ describe('Pay Rent', () => {
     const { amount, from, to, transactable, item, platform, reference } = createTransactionStub(rent._id, TransactableEnum.RENT);  
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/pay`)
-      .set('token', newToken)
+      .set('authorization', newAuthorization)
       .send({ amount, from, to, transactable, item, platform, reference });       
 
     expect(response.status).to.equal(HttpStatus.OK);      

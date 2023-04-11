@@ -1,8 +1,8 @@
-import { MailEnum } from "./mail.enum";
+import { MailTemplateEnum } from "./mail-template.enum";
 
 export interface MailSchema {
   to: string,
   context?: any,
   subject: string,
-  template: MailEnum
+  template: MailTemplateEnum
 }

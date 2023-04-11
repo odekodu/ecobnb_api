@@ -1,44 +1,46 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
+import { ClientSession, Connection } from 'mongoose';
 import { testCheck } from '../shared/test.check';
 import { AccessRights } from '../shared/access.right';
-import {v4 as uuidV4} from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 
 @Injectable()
-export class DatabaseService implements OnModuleInit {
+export class DatabaseService {
+
+  get replicated(){        
+    return Number(this.configService.get('REPLICATED')) === 1;
+  }
 
   constructor(
     @InjectConnection() private readonly connection: Connection,
     private configService: ConfigService
-  ) {  }
+  ) { }
 
   getConnection(): Connection {
     return this.connection;
   }
 
-  async onModuleInit() {
-    await this.setAdmin();
-  }
-
-  async setAdmin(){
-    if (!testCheck()) {
-      const superAdmin = await this.connection.collection('users').findOne({ right: AccessRights.SUPERADMIN });
-      
-      if (!superAdmin){
-        await this.connection.collection('users').insertOne({ 
-          _id: uuidV4() as any,
-          email: this.configService.get('DEFAULT_EMAIL'),
-          phone: '0000000000',
-          firstname: 'default',
-          lastname: 'admin',
-          right: AccessRights.SUPERADMIN,
-          createdAt: new Date(), 
-          updatedAt: new Date(),
-          hidden: false
-        });
+  async transaction<T>(callback: (session: ClientSession) => Promise<T>): Promise<T> {
+    let result: T;    
+    console.log(this.replicated)
+    if (this.replicated) {
+      const session = await this.connection.startSession();
+      try {
+        session.startTransaction();
+        result = await callback(session);
+        await session.commitTransaction();
+      } catch (error) {
+        session.abortTransaction();
+        await session.endSession();
+        throw error;
       }
+      await session.endSession();
+      return result;
     }
+    
+
+    return callback(null);
   }
 }

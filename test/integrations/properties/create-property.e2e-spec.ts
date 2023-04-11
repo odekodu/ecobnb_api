@@ -17,7 +17,7 @@ describe('Create Property', () => {
   let dbConnection: Connection;
   let fixture: Fixture;
   let user: any;
-  let token: any;
+  let authorization: any;
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
 
@@ -40,7 +40,7 @@ describe('Create Property', () => {
 
   beforeEach(async () => {
     user = await fixture.createUser();
-    token = await fixture.login(user);
+    authorization = await fixture.login(user);
   });
 
   afterEach(async() => {
@@ -57,7 +57,7 @@ describe('Create Property', () => {
   it('should fail when no country is provided', async () => {
     const response = await request(httpServer)
       .post('/properties')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({});    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -71,7 +71,7 @@ describe('Create Property', () => {
     const { country } = createPropertyStub;
     const response = await request(httpServer)
       .post('/properties')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ country });   
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -85,7 +85,7 @@ describe('Create Property', () => {
     const { country, state } = createPropertyStub;
     const response = await request(httpServer)
       .post('/properties')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ country, state });   
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -99,7 +99,7 @@ describe('Create Property', () => {
     const { country, state, city } = createPropertyStub;
     const response = await request(httpServer)
       .post('/properties')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ country, state, city });    
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -113,7 +113,7 @@ describe('Create Property', () => {
     const { country, state, city, address } = createPropertyStub;
     const response = await request(httpServer)
       .post('/properties')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ country, state, city, address });   
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -127,7 +127,7 @@ describe('Create Property', () => {
     const { country, state, city, address } = createPropertyStub;
     const response = await request(httpServer)
       .post('/properties')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ country, state, city, address, price: 'Ten' });   
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -141,7 +141,7 @@ describe('Create Property', () => {
     const { country, state, city, address, price } = createPropertyStub;
     const response = await request(httpServer)
       .post('/properties')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ country, state, city, address, price });   
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);  
@@ -155,7 +155,7 @@ describe('Create Property', () => {
     const { country, state, city, address, price, title, description } = createPropertyStub;
     const response = await request(httpServer)
       .post('/properties')
-      .set('token', token)
+      .set('authorization', authorization)
       .send({ country, state, city, address, price, title, description });      
 
     expect(response.status).to.equal(HttpStatus.CREATED);      

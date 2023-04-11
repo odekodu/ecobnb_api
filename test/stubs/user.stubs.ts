@@ -7,7 +7,7 @@ export const createUserStub: CreateUserDto = {
   phone: '00000000000',
   firstname: 'any',
   lastname: 'user',
-  right: AccessRights.CLIENT,
+  rights: [AccessRights.CLIENT],
 }
 
 export const userStub: Partial<User> = {

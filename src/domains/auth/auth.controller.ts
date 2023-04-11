@@ -20,10 +20,10 @@ export class AuthController {
   @CacheFilter()
   @UseGuards(LimitRequestsGuard)
   @Get(':email')
-  request(
+  requestPassword(
     @Param('email', new JoiValidationPipe(Joi.string().email().required())) email: string
   ){
-    return this.authService.request(email);
+    return this.authService.requestPassword(email);
   }
 
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, type: ErrorResponse })
@@ -34,5 +34,15 @@ export class AuthController {
     @Body() auth: AuthSchema
   ){
     return this.authService.login(auth);
+  }
+
+  @ApiResponse({ status: HttpStatus.CREATED, type: ResponseSchema })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, type: ErrorResponse })
+  @ApiResponse({ status: HttpStatus.EXPECTATION_FAILED, type: ErrorResponse })
+  @Post('verify')
+  verifyUser(
+    @Body('code', new JoiValidationPipe(Joi.string().required())) code: string
+  ) {    
+    return this.authService.verifyUser(code);
   }
 }

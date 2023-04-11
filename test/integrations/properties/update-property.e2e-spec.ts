@@ -18,7 +18,7 @@ describe('Remove Property', () => {
   let fixture: Fixture;
   let user: any;
   let property: any;
-  let token: any;
+  let authorization: any;
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
 
@@ -42,7 +42,7 @@ describe('Remove Property', () => {
   beforeEach(async () => {
     user = await fixture.createUser();
     property = await fixture.createProperty(user);
-    token = await fixture.login(user);
+    authorization = await fixture.login(user);
   });
 
   afterEach(async() => {
@@ -59,7 +59,7 @@ describe('Remove Property', () => {
   it('should fail when invalid id is sent', async () => {        
     const response = await request(httpServer)
       .patch(`/properties/${1}`)
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password);
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
@@ -74,7 +74,7 @@ describe('Remove Property', () => {
                
     const response = await request(httpServer)
       .patch(`/properties/${id}`)
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password);      
 
     expect(response.status).to.equal(HttpStatus.NOT_FOUND);      
@@ -86,11 +86,11 @@ describe('Remove Property', () => {
 
   it('should fail to update the property when user is not the owner', async () => {   
     const newUser: any = await fixture.createUser({ email: 'user@mail.com', phone: '12234567899' });
-    const newToken = await fixture.login(newUser);
+    const newAuthorization = await fixture.login(newUser);
 
     const response = await request(httpServer)
       .patch(`/properties/${property._id}`)
-      .set('token', newToken)
+      .set('authorization', newAuthorization)
       .set('password', fixture.password);
 
     expect(response.status).to.equal(HttpStatus.UNAUTHORIZED);      
@@ -103,7 +103,7 @@ describe('Remove Property', () => {
   it('should fail when the price is not valid', async () => {        
     const response = await request(httpServer)
       .patch(`/properties/${property._id}`)
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password)
       .send({ price: 'Ten' })
 
@@ -117,7 +117,7 @@ describe('Remove Property', () => {
   it('should update the property', async () => {        
     const response = await request(httpServer)
       .patch(`/properties/${property._id}`)
-      .set('token', token)
+      .set('authorization', authorization)
       .set('password', fixture.password)
       .send({ price: 10000 })
 

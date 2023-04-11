@@ -8,7 +8,6 @@ import { userStub } from '../../stubs/user.stubs';
 import { Fixture } from '../../fixture';
 import { RedisCacheService } from '../../../src/redis-cache/redis-cache.service';
 import { ConfigService } from '@nestjs/config';
-import { UserResponse } from 'src/domains/users/responses/user.response';
 import { expect } from 'chai';
 
 describe('Get Profile', () => {
@@ -18,7 +17,7 @@ describe('Get Profile', () => {
   let dbConnection: Connection;
   let fixture: Fixture;
   let user: any;
-  let token: string;
+  let authorization: string;
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
 
@@ -41,7 +40,7 @@ describe('Get Profile', () => {
 
   beforeEach(async () => {
     user = await fixture.createUser();
-    token = await fixture.login(user);
+    authorization = await fixture.login(user);
     await fixture.requestPassword(user.email);
   });
 
@@ -58,7 +57,7 @@ describe('Get Profile', () => {
   it('should get the profile', async () => {        
     const response = await request(httpServer)
       .get('/profile')
-      .set('token', token);
+      .set('authorization', authorization);
 
     expect(response.status).to.equal(HttpStatus.OK);      
     expect(response.body.payload).to.deep.include(userStub);

@@ -10,5 +10,5 @@ export const CreateUserValidator = Joi.object({
   }),
   firstname: Joi.string().required(),
   lastname: Joi.string().required(),
-  right: Joi.string().valid(...Object.values(AccessRights))
+  rights: Joi.array().items(Joi.string().valid(...Object.values(AccessRights)))
 });

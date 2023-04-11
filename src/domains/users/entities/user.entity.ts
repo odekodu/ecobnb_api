@@ -27,13 +27,9 @@ export class User {
   @Prop({ required: [true, '"Lastname" is required']})
   lastname?: string;
 
-  @ApiProperty({ description: 'Type of user' })
-  @Prop({ type: String, default: AccessRights.CLIENT })
-  right?: AccessRights;
-
-  @ApiProperty({ description: 'Wallet address of user' })
-  @Prop()
-  wallet?: string;
+  @ApiProperty({ description: 'User access' })
+  @Prop({ type: [String], default: [AccessRights.CLIENT] })
+  rights?: AccessRights[];
 
   @ApiProperty({ description: 'Verification status of user' })
   @Prop({ default: false })

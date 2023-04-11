@@ -10,5 +10,5 @@ export const UpdateProfileValidator = Joi.object({
   }),
   firstname: Joi.string(),
   lastname: Joi.string(),
-  wallet: Joi.string()
+  image: Joi.string()
 });

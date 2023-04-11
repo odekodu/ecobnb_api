@@ -21,8 +21,8 @@ describe('Approve Rent', () => {
   let newUser: any;
   let property: any;
   let rent: any;
-  let token: string;
-  let newToken: string;
+  let authorization: any;
+  let newAuthorization: any;
   let redisCacheService: RedisCacheService;
   let configService: ConfigService;
 
@@ -48,8 +48,8 @@ describe('Approve Rent', () => {
     newUser = await fixture.createUser({ email: 'user@mail.com', phone: '12345678990'});
     property = await fixture.createProperty(user);
     rent = await fixture.requestRent(newUser, property);
-    token = await fixture.login(user);
-    newToken = await fixture.login(newUser);
+    authorization = await fixture.login(user);
+    newAuthorization = await fixture.login(newUser);
   });
 
   afterEach(async() => {
@@ -67,7 +67,7 @@ describe('Approve Rent', () => {
   it('should fail when invalid id is sent', async () => {        
     const response = await request(httpServer)
       .patch(`/rents/${1}/approve`)
-      .set('token', token);
+      .set('authorization', authorization);
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
     expect(response.body).to.deep.include({
@@ -81,7 +81,7 @@ describe('Approve Rent', () => {
                
     const response = await request(httpServer)
       .patch(`/rents/${id}/approve`)
-      .set('token', token);      
+      .set('authorization', authorization);      
 
     expect(response.status).to.equal(HttpStatus.NOT_FOUND);      
     expect(response.body).to.deep.include({
@@ -93,7 +93,7 @@ describe('Approve Rent', () => {
   it('should fail when occupant wants to approve rent', async () => {
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/approve`)
-      .set('token', newToken)
+      .set('authorization', newAuthorization)
       .send({ status: RentState.APPROVED });    
 
     expect(response.status).to.equal(HttpStatus.UNAUTHORIZED);      
@@ -108,7 +108,7 @@ describe('Approve Rent', () => {
 
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/approve`)
-      .set('token', token);
+      .set('authorization', authorization);
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
     expect(response.body).to.deep.include({
@@ -124,7 +124,7 @@ describe('Approve Rent', () => {
 
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/approve`)
-      .set('token', token);
+      .set('authorization', authorization);
 
     expect(response.status).to.equal(HttpStatus.BAD_REQUEST);      
     expect(response.body).to.deep.include({
@@ -136,7 +136,7 @@ describe('Approve Rent', () => {
   it('should approve rent', async () => {        
     const response = await request(httpServer)
       .patch(`/rents/${rent._id}/approve`)
-      .set('token', token);
+      .set('authorization', authorization);
 
     expect(response.status).to.equal(HttpStatus.OK);      
     expect(response.body.payload).to.deep.include({ ...rentStub, status: RentState.APPROVED });

@@ -1,9 +1,10 @@
-import { createReadStream, createWriteStream, mkdirSync, rename, rmSync, stat, statSync, unlink } from "fs";
+import { createReadStream, createWriteStream, mkdirSync, rename, rmSync, stat, unlink, writeFile } from "fs";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
 import { diskStorage } from 'multer';
 import { v4 as uuidV4 } from 'uuid';
 import { testCheck } from "./test.check";
+import { HttpException, HttpStatus } from "@nestjs/common";
 
 export class Storage {  
   
@@ -67,23 +68,30 @@ export class Storage {
     });
   }
 
-  delete(path: string): Promise<string> {  
-    return new Promise((resolve, reject) => {
-        stat(path, (err, file) => {          
-          if(file) {
-            rmSync(path);
-          }
-          resolve('');
-        });
+  base64ToFile(base64Text: string, destination: string, name: string){
+    const base64 = ';base64,';
+    if (!base64Text.includes(base64)) throw new HttpException('Not a valid base64 file', HttpStatus.BAD_REQUEST);
+
+    const base64TextFile = base64Text.split(base64).pop();
+    const filename = this.join(destination, name);
+    
+    return new Promise<string>((resolve, reject) => {
+      mkdirSync(this.join(destination), { recursive: true });
+      writeFile(filename, base64TextFile, {encoding: 'base64'}, (error) => {
+        if (error) reject(error);
+        resolve(filename);
+      });
     });
   }
 
-  static reset (){
-    stat(Storage.path, (err, store) => {
-      if(store) {
-        rmSync(Storage.path, { recursive: true });
-      }
-    });
+  static reset (){    
+    if (testCheck){
+      stat(Storage.path, (error) => {
+        if (error?.code !== 'ENOENT'){
+          rmSync(Storage.path, { recursive: true });
+        }
+      });
+    }
   }
 
   static upload(
